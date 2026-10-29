@@ -79,7 +79,7 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def plot(run_dir: Path, curves: dict[str, list[float]]) -> None:
+def plot(run_dir: Path, curves: dict[str, list[float]], benchmark: str) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -89,7 +89,9 @@ def plot(run_dir: Path, curves: dict[str, list[float]]) -> None:
     for name, ys in curves.items():
         ax.plot(range(1, len(ys) + 1), [y * 100 for y in ys], marker="o", label=name)
     ax.set_xlabel("attempts allowed")
-    ax.set_ylabel("HumanEval pass@1 (%)")
+    ax.set_ylabel(
+        f"{ {'humaneval': 'HumanEval', 'livecodebench': 'LiveCodeBench (hard)'}.get(benchmark, benchmark) } pass@1 (%)"
+    )
     ax.set_xticks(range(1, max(len(v) for v in curves.values()) + 1))
     ax.grid(alpha=0.3)
     ax.legend()
@@ -116,7 +118,7 @@ def main(argv: list[str] | None = None) -> None:
         if s != "base"
     }
     if curves:
-        plot(run_dir, curves)
+        plot(run_dir, curves, config.get("benchmark", "humaneval"))
 
     lines = [
         f"# Results: {args.run_name}",

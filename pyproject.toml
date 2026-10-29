@@ -1,7 +1,7 @@
 [project]
-name = "reflexion-replication"
+name = "reflexion-agent"
 version = "0.1.0"
-description = "Replication of Reflexion (Shinn et al., NeurIPS 2023) on HumanEval with LangGraph"
+description = "Self-reflecting coding agent with episodic memory, built with LangGraph"
 requires-python = ">=3.12"
 dependencies = [
     "langgraph==1.2.18",

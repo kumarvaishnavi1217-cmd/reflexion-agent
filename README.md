@@ -1,11 +1,11 @@
-# Reflexion, replicated with LangGraph
+# Reflexion Agent: self-reflecting code generation with LangGraph
 
-A replication of **Reflexion: Language Agents with Verbal Reinforcement Learning** (Shinn et al., NeurIPS 2023, [arXiv:2303.11366](https://arxiv.org/abs/2303.11366)) on code generation. The agent:
+A coding agent that learns from its own mistakes within a task, implementing the Reflexion method (**Reflexion: Language Agents with Verbal Reinforcement Learning**, Shinn et al., NeurIPS 2023, [arXiv:2303.11366](https://arxiv.org/abs/2303.11366)). The agent:
 - writes its own unit tests;
 - implements a solution and runs it against those tests in a sandbox;
 - when the tests fail, writes a **self-reflection** that is stored in **episodic memory** and fed into the next attempt.
 
-The experiments test the paper's claims on a current model (Claude Haiku 5.5):
+The experiments test whether the method still pays off with a current model (Claude Haiku 5.5):
 1. **HumanEval**, the paper's benchmark;
 2. **LiveCodeBench v6**, hard contest problems from 2025, because HumanEval turned out to be saturated;
 
@@ -41,7 +41,20 @@ Haiku 5.5 solves every problem on its first attempt, so Reflexion has nothing le
 
 ### 2. LiveCodeBench v6, hard (80 problems, January–April 2025)
 
-*Run in progress; results will be added here.*
+| Claude Haiku 5.5 | first attempt | final pass@1 | wrong at first, fixed by the loop | correct at first, broken by the loop |
+|---|---|---|---|---|
+| **Reflexion** (test feedback + self-reflection) | 66.2% | **82.5%** | 13 | 0 |
+| Retry with test feedback only (ablation) | 60.0% | **81.2%** | 17 | 0 |
+
+![accuracy vs attempts](results/lcb-hard-haiku/accuracy_vs_attempts.png)
+
+**What the numbers show:**
+- **The loop works.** Running the solution against self-generated tests and trying again raises pass@1 by about 16–21 points. Nearly all of the gain arrives with the second attempt.
+- **The verbal self-reflection adds nothing measurable on top of test feedback.** Paired on the same 80 problems, 2 were solved only with Reflexion and 1 only with plain retry (exact McNemar p = 1.0). The two arms' first attempts use identical prompts, yet they differ by 5 problems (60.0% vs 66.2%): sampling noise alone is larger than any reflection effect here. The paper's own ablation (50 HumanEval-Rust problems, GPT-4) found a gain, 0.60 → 0.68. With a current model and contest problems, this experiment doesn't reproduce it. The benefit comes from executing tests and feeding back the failures.
+- **Self-generated tests are the ceiling.** 16% of solutions that passed the agent's own tests were actually wrong, which ends the loop on a wrong answer. The paper reports 1% for HumanEval and 16% for MBPP. When a solution failed its own tests, 29% of the time the solution was right and the test was wrong. The loop never broke a correct first solution, though.
+- By platform: LeetCode 90% → 95%, AtCoder 58% → 78% (Reflexion arm). AtCoder problems are where iteration pays off.
+
+Caveat: one model, one sample per problem, 80 problems. Repeated runs with different seeds would narrow the uncertainty. Full report: [results/lcb-hard-haiku/REPORT.md](results/lcb-hard-haiku/REPORT.md).
 
 ## Run it
 
@@ -67,9 +80,9 @@ Options: `--model haiku|sonnet|opus`, `--max-attempts 4`, `--memory-size 3`, `--
 
 CI runs ruff, strict mypy and the tests.
 
-## Differences from the paper
+## Compared with the original paper
 
-- **Model:** Claude Haiku 5.5 instead of GPT-4, and prompts written for this replication.
+- **Model:** Claude Haiku 5.5 instead of GPT-4, and prompts written for this project.
 - **Tests:** generated with a direct prompt and filtered by AST/format, without the paper's chain-of-thought step.
 - **Benchmark:** LiveCodeBench replaces the paper's LeetcodeHardGym, which needs LeetCode submissions.
-- **Scope:** the "test generation omission" ablation and the paper's reasoning and decision-making tasks (HotpotQA, ALFWorld) are not replicated.
+- **Scope:** the "test generation omission" ablation and the paper's reasoning and decision-making tasks (HotpotQA, ALFWorld) are not covered.

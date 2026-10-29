@@ -1,4 +1,4 @@
-"""Prompt pieces shared by all benchmarks. Written for this replication; they follow the structure of the
+"""Prompt pieces shared by all benchmarks. Written for this project; they follow the structure of the
 paper's prompts (test writer, actor, self-reflection), not their wording."""
 
 import re

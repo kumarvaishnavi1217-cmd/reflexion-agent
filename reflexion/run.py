@@ -130,12 +130,17 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--max-attempts", type=int, default=4)
     parser.add_argument("--memory-size", type=int, default=3, help="reflections kept in the prompt")
     parser.add_argument("--n-tests", type=int, default=6, help="self-generated unit tests (paper: max 6)")
+    parser.add_argument("--llm-timeout", type=int, default=180, help="seconds per model call (CLI backend)")
     parser.add_argument("--executor", choices=["docker", "local"], default="docker")
     parser.add_argument("--run-name", required=True)
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
-    llm: LLM = ClaudeCodeLLM(args.model) if args.backend == "claude-code" else AnthropicLLM(args.model)
+    llm: LLM = (
+        ClaudeCodeLLM(args.model, timeout_s=args.llm_timeout)
+        if args.backend == "claude-code"
+        else AnthropicLLM(args.model)
+    )
     executor: Executor = DockerExecutor() if args.executor == "docker" else LocalExecutor()
     benchmark: Benchmark = (
         HumanEval(load_tasks(limit=args.limit))

@@ -9,4 +9,3 @@ results/*.log
 results/smoke/
 data/lcb_test6.jsonl
 results/lcb-smoke/
-results/lcb-hard-haiku/
