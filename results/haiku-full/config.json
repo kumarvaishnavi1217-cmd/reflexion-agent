@@ -1,0 +1,7 @@
+{
+  "model": "haiku (Claude Code CLI)",
+  "tasks": 164,
+  "max_attempts": 4,
+  "memory_size": 3,
+  "n_tests": 6
+}
